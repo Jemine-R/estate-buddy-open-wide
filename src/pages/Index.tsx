@@ -1,7 +1,7 @@
-import { SearchInterface } from "@/components/SearchInterface";
+import { LoginPage } from "@/components/LoginPage";
 
 const Index = () => {
-  return <SearchInterface />;
+  return <LoginPage />;
 };
 
 export default Index;
