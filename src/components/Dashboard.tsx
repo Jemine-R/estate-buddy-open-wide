@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, LogOut } from "lucide-react";
+import { Search, LogOut, ChevronLeft, LayoutDashboard, DoorOpen, CreditCard, FileText, Users, Settings } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 
 export const Dashboard = () => {
   const [searchQuery, setSearchQuery] = useState("");
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -20,37 +21,44 @@ export const Dashboard = () => {
   };
 
   const sidebarItems = [
-    { name: "Dashboard", active: true },
-    { name: "🚪 Door Access", active: false },
-    { name: "Key Cards", active: false },
-    { name: "Access Log", active: false },
-    { name: "Residents", active: false },
-    { name: "Settings", active: false },
+    { name: "Dashboard", active: true, icon: LayoutDashboard },
+    { name: "Door Access", active: false, icon: DoorOpen },
+    { name: "Key Cards", active: false, icon: CreditCard },
+    { name: "Access Log", active: false, icon: FileText },
+    { name: "Residents", active: false, icon: Users },
+    { name: "Settings", active: false, icon: Settings },
   ];
 
   return (
     <div className="flex min-h-screen bg-gray-50">
       {/* Sidebar */}
-      <div className="w-48 bg-white border-r border-gray-200">
+      <div className={`${sidebarCollapsed ? 'w-16' : 'w-48'} bg-white border-r border-gray-200 transition-all duration-300`}>
         <div className="p-4">
-          <div className="flex items-center gap-2 mb-8">
-            <div className="w-6 h-6 rounded-full border-2 border-black flex items-center justify-center text-xs">
-              🌐
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded-full border-2 border-black flex items-center justify-center text-xs">
+                🌐
+              </div>
+              {!sidebarCollapsed && <span className="font-semibold text-black">Estate Buddy</span>}
             </div>
-            <span className="font-semibold text-black">Estate Buddy</span>
+            <ChevronLeft 
+              className={`h-4 w-4 cursor-pointer transition-transform duration-300 ${sidebarCollapsed ? 'rotate-180' : ''}`}
+              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+            />
           </div>
           
           <nav className="space-y-1">
             {sidebarItems.map((item) => (
               <div
                 key={item.name}
-                className={`px-3 py-2 text-sm cursor-pointer rounded ${
+                className={`px-3 py-2 text-sm cursor-pointer rounded flex items-center gap-3 ${
                   item.active 
                     ? "bg-gray-100 font-medium text-black" 
                     : "text-gray-600 hover:bg-gray-50"
                 }`}
               >
-                {item.name}
+                <item.icon className="h-4 w-4 flex-shrink-0" />
+                {!sidebarCollapsed && <span>{item.name}</span>}
               </div>
             ))}
           </nav>
