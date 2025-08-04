@@ -61,7 +61,15 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
-				}
+				},
+				success: {
+					DEFAULT: 'hsl(var(--success))',
+					foreground: 'hsl(var(--success-foreground))'
+				},
+				'search-bg': 'hsl(var(--search-bg))',
+				'search-border': 'hsl(var(--search-border))',
+				'login-bg': 'hsl(var(--login-bg))',
+				'stats-green': 'hsl(var(--stats-green))'
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
