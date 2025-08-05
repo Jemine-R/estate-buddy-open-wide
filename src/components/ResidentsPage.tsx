@@ -1,13 +1,16 @@
 import { useState } from "react";
-import { Search, Plus, MoreHorizontal, Key, Mail, User } from "lucide-react";
+import { Search, Plus, MoreHorizontal, Key, Mail, User, UserX } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
 
 export const ResidentsPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   const residents = [
     { 
@@ -19,7 +22,8 @@ export const ResidentsPage = () => {
       keyCards: "1 key card",
       avatar: "JD",
       avatarColor: "bg-teal-500",
-      residentSince: "15/06/2022"
+      residentSince: "15/06/2022",
+      photo: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=150&h=150&fit=crop&crop=face"
     },
     { 
       name: "Jane Smith", 
@@ -30,7 +34,8 @@ export const ResidentsPage = () => {
       keyCards: "1 key card",
       avatar: "JS",
       avatarColor: "bg-teal-500",
-      residentSince: "03/10/2021"
+      residentSince: "03/10/2021",
+      photo: "https://images.unsplash.com/photo-1581092795360-fd1ca04f0952?w=150&h=150&fit=crop&crop=face"
     },
     { 
       name: "Robert Johnson", 
@@ -114,24 +119,39 @@ export const ResidentsPage = () => {
           <div key={index} className="bg-white rounded-lg border border-gray-200 p-6">
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-3">
-                <div className={`w-10 h-10 ${resident.avatarColor} text-white rounded-full flex items-center justify-center font-medium`}>
-                  {resident.avatar}
-                </div>
+                {resident.photo ? (
+                  <img src={resident.photo} alt={resident.name} className="w-10 h-10 rounded-full object-cover" />
+                ) : (
+                  <div className={`w-10 h-10 ${resident.avatarColor} text-white rounded-full flex items-center justify-center font-medium`}>
+                    {resident.avatar}
+                  </div>
+                )}
                 <div>
-                  <h3 className="font-semibold text-black">{resident.name}</h3>
-                  <p className="text-sm text-gray-600">{resident.apartment}</p>
+                  <h1 className="text-lg font-semibold text-black">{resident.name}</h1>
+                  <p className="text-sm text-gray-600">{resident.email}</p>
                 </div>
               </div>
-              <Button variant="ghost" size="sm">
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="ghost" size="sm">
+                    <MoreHorizontal className="h-4 w-4" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-40">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
+                    onClick={() => toast({ title: "Access Restricted", description: `Access restricted for ${resident.name}` })}
+                  >
+                    <UserX className="h-4 w-4 mr-2" />
+                    Restrict Access
+                  </Button>
+                </PopoverContent>
+              </Popover>
             </div>
             
             <div className="space-y-2 mb-4">
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <User className="h-4 w-4" />
-                <span>{resident.email}</span>
-              </div>
               <div className="flex items-center gap-2 text-sm text-gray-600">
                 <Key className="h-4 w-4" />
                 <span>{resident.keyCards}</span>

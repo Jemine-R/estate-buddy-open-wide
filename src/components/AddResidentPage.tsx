@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowLeft, Calendar } from "lucide-react";
+import { ArrowLeft, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,10 +20,22 @@ export const AddResidentPage = () => {
     numberOfResidents: "",
     rentPaidDate: "",
     rentDueDate: "",
+    photo: null as string | null,
   });
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setFormData(prev => ({ ...prev, photo: e.target?.result as string }));
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const calculateRentStatus = () => {
@@ -153,6 +165,41 @@ export const AddResidentPage = () => {
                     <SelectItem value="6">6+ people</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+              
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="photo">Passport Photograph</Label>
+                <div className="flex items-center gap-4">
+                  <Input
+                    id="photo"
+                    type="file"
+                    accept="image/*"
+                    onChange={handlePhotoUpload}
+                    className="hidden"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => document.getElementById('photo')?.click()}
+                    className="flex items-center gap-2"
+                  >
+                    <Upload className="h-4 w-4" />
+                    Upload Photo
+                  </Button>
+                  {formData.photo && (
+                    <div className="flex items-center gap-2">
+                      <img src={formData.photo} alt="Preview" className="w-12 h-12 rounded object-cover" />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setFormData(prev => ({ ...prev, photo: null }))}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
