@@ -71,8 +71,28 @@ export const AddResidentPage = () => {
       return;
     }
 
-    // Save resident data (in a real app, this would go to a database)
-    console.log("New resident data:", formData);
+    // Save to localStorage
+    const existingResidents = JSON.parse(localStorage.getItem('residents') || '[]');
+    const rentStatus = calculateRentStatus();
+    
+    const newResident = {
+      id: `R-${Date.now()}`,
+      name: formData.name,
+      email: formData.email,
+      houseNumber: formData.houseNumber,
+      phone: formData.phone,
+      occupation: formData.occupation,
+      numberOfResidents: formData.numberOfResidents,
+      rentPaidDate: formData.rentPaidDate,
+      rentDueDate: formData.rentDueDate,
+      photo: formData.photo,
+      keyCardStatus: 'Inactive',
+      status: rentStatus?.status.toLowerCase().replace(' ', '-') || 'paid',
+      residentSince: new Date().toLocaleDateString(),
+    };
+    
+    const updatedResidents = [...existingResidents, newResident];
+    localStorage.setItem('residents', JSON.stringify(updatedResidents));
     
     toast({
       title: "Resident Added Successfully",

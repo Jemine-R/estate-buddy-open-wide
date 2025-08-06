@@ -22,13 +22,21 @@ const mockResidents = [
 export const KeyCardsPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("All");
-  const [keyCards, setKeyCards] = useState([
-    { id: "KC-1234", name: "John Doe", status: "ACTIVE", statusColor: "bg-green-100 text-green-800", issued: "Issued over 2 years ago", expires: "Expires over 1 year ago", email: "john.doe@example.com", rentalStatus: "Paid", photo: null, qrCode: null },
-    { id: "KC-5678", name: "Jane Smith", status: "ACTIVE", statusColor: "bg-green-100 text-green-800", issued: "Issued over 2 years ago", expires: "", email: "jane.smith@example.com", rentalStatus: "Paid", photo: null, qrCode: null },
-    { id: "KC-9012", name: "Robert Johnson", status: "INACTIVE", statusColor: "bg-gray-100 text-gray-800", issued: "Issued almost 3 years ago", expires: "Expired almost 3 years ago", email: "robert.j@example.com", rentalStatus: "Overdue", photo: null, qrCode: null },
-    { id: "KC-3456", name: "Maria Garcia", status: "LOST", statusColor: "bg-red-100 text-red-800", issued: "Issued about 2 years ago", expires: "", email: "maria.g@example.com", rentalStatus: "Due Soon", photo: null, qrCode: null },
-    { id: "KC-7890", name: "David Wilson", status: "EXPIRED", statusColor: "bg-orange-100 text-orange-800", issued: "Issued almost 3 years ago", expires: "Expired almost 2 years ago", email: "david.w@example.com", rentalStatus: "Paid", photo: null, qrCode: null },
-  ]);
+  
+  // Load key cards from localStorage
+  const getKeyCards = () => {
+    const saved = localStorage.getItem('keyCards');
+    const defaultCards = [
+      { id: "KC-1234", name: "John Doe", status: "ACTIVE", statusColor: "bg-green-100 text-green-800", issued: "Issued over 2 years ago", expires: "Expires over 1 year ago", email: "john.doe@example.com", rentalStatus: "Paid", photo: null, qrCode: null },
+      { id: "KC-5678", name: "Jane Smith", status: "ACTIVE", statusColor: "bg-green-100 text-green-800", issued: "Issued over 2 years ago", expires: "", email: "jane.smith@example.com", rentalStatus: "Paid", photo: null, qrCode: null },
+      { id: "KC-9012", name: "Robert Johnson", status: "INACTIVE", statusColor: "bg-gray-100 text-gray-800", issued: "Issued almost 3 years ago", expires: "Expired almost 3 years ago", email: "robert.j@example.com", rentalStatus: "Overdue", photo: null, qrCode: null },
+      { id: "KC-3456", name: "Maria Garcia", status: "LOST", statusColor: "bg-red-100 text-red-800", issued: "Issued about 2 years ago", expires: "", email: "maria.g@example.com", rentalStatus: "Due Soon", photo: null, qrCode: null },
+      { id: "KC-7890", name: "David Wilson", status: "EXPIRED", statusColor: "bg-orange-100 text-orange-800", issued: "Issued almost 3 years ago", expires: "Expired almost 2 years ago", email: "david.w@example.com", rentalStatus: "Paid", photo: null, qrCode: null },
+    ];
+    return saved ? JSON.parse(saved) : defaultCards;
+  };
+
+  const [keyCards, setKeyCards] = useState(getKeyCards());
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isResidentDialogOpen, setIsResidentDialogOpen] = useState(false);
   const [selectedResidentForCard, setSelectedResidentForCard] = useState("");
@@ -98,7 +106,12 @@ export const KeyCardsPage = () => {
       qrCode
     };
 
-    setKeyCards(prev => [...prev, cardToAdd]);
+    const updatedCards = [...keyCards, cardToAdd];
+    setKeyCards(updatedCards);
+    
+    // Save to localStorage
+    localStorage.setItem('keyCards', JSON.stringify(updatedCards));
+    
     setNewCard({ name: "", email: "", rentalStatus: "", photo: null });
     setIsDialogOpen(false);
     
@@ -112,6 +125,8 @@ export const KeyCardsPage = () => {
     setKeyCards(prev => prev.map(card => {
       if (card.id === cardId) {
         switch (action) {
+          case "active":
+            return { ...card, status: "ACTIVE", statusColor: "bg-green-100 text-green-800" };
           case "inactive":
             return { ...card, status: "INACTIVE", statusColor: "bg-gray-100 text-gray-800" };
           case "lost":
@@ -358,6 +373,9 @@ export const KeyCardsPage = () => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="bg-white">
+                  <DropdownMenuItem onClick={() => handleCardAction(card.id, "active")}>
+                    Mark as Active
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => handleCardAction(card.id, "inactive")}>
                     Mark as Inactive
                   </DropdownMenuItem>
@@ -389,20 +407,25 @@ export const KeyCardsPage = () => {
             </div>
             
             {card.qrCode && (
-              <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <QrCode className="h-4 w-4 text-blue-500" />
-                  <span className="text-xs text-blue-500">QR Code Available</span>
+              <div className="mt-4 pt-4 border-t border-gray-100">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <QrCode className="h-4 w-4 text-blue-500" />
+                    <span className="text-xs text-blue-500">QR Code Available</span>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => sendQRCodeEmail(card)}
+                    className="text-xs"
+                  >
+                    <Mail className="h-3 w-3 mr-1" />
+                    Send
+                  </Button>
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => sendQRCodeEmail(card)}
-                  className="text-xs"
-                >
-                  <Mail className="h-3 w-3 mr-1" />
-                  Send
-                </Button>
+                <div className="flex justify-center">
+                  <img src={card.qrCode} alt="QR Code" className="w-24 h-24" />
+                </div>
               </div>
             )}
           </div>
