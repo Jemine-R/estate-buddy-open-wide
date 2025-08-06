@@ -9,6 +9,7 @@ import { DoorAccessPage } from "./DoorAccessPage";
 import { KeyCardsPage } from "./KeyCardsPage";
 import { AccessLogsPage } from "./AccessLogsPage";
 import { ResidentsPage } from "./ResidentsPage";
+import { SettingsPage } from "./SettingsPage";
 
 export const Dashboard = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -22,8 +23,25 @@ export const Dashboard = () => {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Searching for:", searchQuery);
-    // Add search functionality here
+    
+    // Global search functionality
+    const query = searchQuery.toLowerCase();
+    
+    if (query.includes("settings") || query.includes("admin") || query.includes("password")) {
+      setActivePage("Settings");
+    } else if (query.includes("door") || query.includes("access") || query.includes("main entrance")) {
+      setActivePage("Door Access");
+    } else if (query.includes("keycard") || query.includes("key card") || query.includes("card")) {
+      setActivePage("Key Cards");
+    } else if (query.includes("resident") || query.includes("tenant")) {
+      setActivePage("Residents");
+    } else if (query.includes("log") || query.includes("activity")) {
+      setActivePage("Access Log");
+    } else if (query.includes("dashboard") || query.includes("home")) {
+      setActivePage("Dashboard");
+    }
+    
+    setSearchQuery("");
   };
 
   const sidebarItems = [
@@ -50,7 +68,7 @@ export const Dashboard = () => {
       case "Residents":
         return <ResidentsPage />;
       case "Settings":
-        return <div className="p-6"><h1 className="text-2xl font-semibold text-black">Settings</h1><p className="text-gray-500 mt-4">Settings page coming soon...</p></div>;
+        return <SettingsPage />;
       default:
         return (
           <div className="p-6">
@@ -63,29 +81,60 @@ export const Dashboard = () => {
               </div>
               
               <div className="bg-white rounded-lg border border-gray-200 p-6">
-                <div className="text-sm text-gray-500 mb-2">Door</div>
-                <div className="text-3xl font-bold text-black mb-2">25</div>
-                <div className="text-xs text-gray-500">🔑</div>
-              </div>
-              
-              <div className="bg-white rounded-lg border border-gray-200 p-6">
                 <div className="text-sm text-gray-500 mb-2">Active Key Cards</div>
                 <div className="text-3xl font-bold text-black mb-2">205</div>
-                <div className="text-xs text-gray-500">12 new free</div>
+                <div className="text-xs text-blue-600">12 new issued</div>
               </div>
               
               <div className="bg-white rounded-lg border border-gray-200 p-6">
-                <div className="text-sm text-gray-500 mb-2">Today's Activity</div>
-                <div className="text-3xl font-bold text-black mb-2">100</div>
-                <div className="text-xs text-green-600">+50% vs yesterday</div>
+                <div className="text-sm text-gray-500 mb-2">Door Access Events</div>
+                <div className="text-3xl font-bold text-black mb-2">847</div>
+                <div className="text-xs text-gray-500">Today</div>
+              </div>
+              
+              <div className="bg-white rounded-lg border border-gray-200 p-6">
+                <div className="text-sm text-gray-500 mb-2">Rent Overdue</div>
+                <div className="text-3xl font-bold text-red-600 mb-2">12</div>
+                <div className="text-xs text-red-600">Needs attention</div>
               </div>
             </div>
 
-            {/* Recent Activity */}
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-black mb-4">Recent Activity</h3>
-              <div className="h-48 bg-gray-50 rounded-lg flex items-center justify-center text-gray-500">
-                Activity logs will appear here
+            {/* Recent Activity Summary */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="bg-white rounded-lg border border-gray-200 p-6">
+                <h3 className="text-lg font-semibold text-black mb-4">Recent Key Card Activity</h3>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between p-3 bg-green-50 rounded">
+                    <span className="text-sm">New card issued to John Smith</span>
+                    <span className="text-xs text-gray-500">2 hours ago</span>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-red-50 rounded">
+                    <span className="text-sm">Card KC-1234 marked as lost</span>
+                    <span className="text-xs text-gray-500">5 hours ago</span>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-blue-50 rounded">
+                    <span className="text-sm">QR code sent to Maria Garcia</span>
+                    <span className="text-xs text-gray-500">1 day ago</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-lg border border-gray-200 p-6">
+                <h3 className="text-lg font-semibold text-black mb-4">Resident Status Summary</h3>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between p-3 bg-yellow-50 rounded">
+                    <span className="text-sm">15 residents with rent due soon</span>
+                    <span className="text-xs text-yellow-600">Action needed</span>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-green-50 rounded">
+                    <span className="text-sm">3 new residents added this week</span>
+                    <span className="text-xs text-green-600">Growing</span>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-blue-50 rounded">
+                    <span className="text-sm">Door access configured for Block A</span>
+                    <span className="text-xs text-blue-600">Updated</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

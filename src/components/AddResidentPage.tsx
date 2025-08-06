@@ -17,6 +17,7 @@ export const AddResidentPage = () => {
     email: "",
     houseNumber: "",
     occupation: "",
+    phone: "",
     numberOfResidents: "",
     rentPaidDate: "",
     rentDueDate: "",
@@ -147,6 +148,17 @@ export const AddResidentPage = () => {
                   value={formData.occupation}
                   onChange={(e) => handleInputChange("occupation", e.target.value)}
                   placeholder="Enter occupation"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="phone">Phone Number</Label>
+                <Input
+                  id="phone"
+                  type="tel"
+                  value={formData.phone || ""}
+                  onChange={(e) => handleInputChange("phone", e.target.value)}
+                  placeholder="Enter phone number"
                 />
               </div>
 
