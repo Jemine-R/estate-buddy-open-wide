@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, Plus, MoreHorizontal, Upload, X, QrCode, Mail } from "lucide-react";
+import { Search, Plus, MoreHorizontal, QrCode, Mail } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,14 +10,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import QRCode from "qrcode";
 
-// Mock residents data (in real app, this would come from a global state or API)
-const mockResidents = [
-  { id: "R-001", name: "John Doe", email: "john.doe@example.com" },
-  { id: "R-002", name: "Jane Smith", email: "jane.smith@example.com" },
-  { id: "R-003", name: "Robert Johnson", email: "robert.j@example.com" },
-  { id: "R-004", name: "Maria Garcia", email: "maria.g@example.com" },
-  { id: "R-005", name: "David Wilson", email: "david.w@example.com" },
-];
+// Get residents from localStorage
+const getResidents = () => {
+  const saved = localStorage.getItem('residents');
+  return saved ? JSON.parse(saved) : [];
+};
 
 export const KeyCardsPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -41,7 +38,7 @@ export const KeyCardsPage = () => {
   const [isResidentDialogOpen, setIsResidentDialogOpen] = useState(false);
   const [selectedResidentForCard, setSelectedResidentForCard] = useState("");
   const [residentSearchQuery, setResidentSearchQuery] = useState("");
-  const [newCard, setNewCard] = useState({ name: "", email: "", rentalStatus: "", photo: null as string | null });
+  const [newCard, setNewCard] = useState({ selectedResidentId: "", rentalStatus: "" });
   const { toast } = useToast();
 
   const tabs = ["All", "Active", "Inactive", "Lost", "Expired"];
@@ -53,16 +50,6 @@ export const KeyCardsPage = () => {
     return matchesSearch && matchesTab;
   });
 
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setNewCard(prev => ({ ...prev, photo: e.target?.result as string }));
-      };
-      reader.readAsDataURL(file);
-    }
-  };
 
   const generateQRCode = async (cardId: string, residentEmail: string) => {
     try {
@@ -81,24 +68,36 @@ export const KeyCardsPage = () => {
   };
 
   const handleCreateCard = async () => {
-    if (!newCard.name || !newCard.email || !newCard.rentalStatus) {
+    if (!newCard.selectedResidentId || !newCard.rentalStatus) {
       toast({
         title: "Error",
-        description: "Please fill in all required fields",
+        description: "Please select a resident and rental status",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const residents = getResidents();
+    const selectedResident = residents.find(r => r.id === newCard.selectedResidentId);
+    
+    if (!selectedResident) {
+      toast({
+        title: "Error",
+        description: "Selected resident not found",
         variant: "destructive",
       });
       return;
     }
 
     const newId = `KC-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
-    const qrCode = await generateQRCode(newId, newCard.email);
+    const qrCode = await generateQRCode(newId, selectedResident.email);
     
     const cardToAdd = {
       id: newId,
-      name: newCard.name,
-      email: newCard.email,
+      name: selectedResident.name,
+      email: selectedResident.email,
+      houseNumber: selectedResident.houseNumber,
       rentalStatus: newCard.rentalStatus,
-      photo: newCard.photo,
       status: "ACTIVE" as const,
       statusColor: "bg-green-100 text-green-800",
       issued: `Issued today`,
@@ -112,7 +111,7 @@ export const KeyCardsPage = () => {
     // Save to localStorage
     localStorage.setItem('keyCards', JSON.stringify(updatedCards));
     
-    setNewCard({ name: "", email: "", rentalStatus: "", photo: null });
+    setNewCard({ selectedResidentId: "", rentalStatus: "" });
     setIsDialogOpen(false);
     
     toast({
@@ -154,17 +153,13 @@ export const KeyCardsPage = () => {
       return;
     }
 
-    const resident = mockResidents.find(r => r.id === selectedResidentForCard);
-    if (resident) {
-      setNewCard(prev => ({ 
-        ...prev, 
-        name: resident.name, 
-        email: resident.email 
-      }));
-      setIsResidentDialogOpen(false);
-      setSelectedResidentForCard("");
-      setResidentSearchQuery("");
-    }
+    setNewCard(prev => ({ 
+      ...prev, 
+      selectedResidentId: selectedResidentForCard
+    }));
+    setIsResidentDialogOpen(false);
+    setSelectedResidentForCard("");
+    setResidentSearchQuery("");
   };
 
   const sendQRCodeEmail = (card: any) => {
@@ -174,7 +169,8 @@ export const KeyCardsPage = () => {
     });
   };
 
-  const filteredResidents = mockResidents.filter(resident =>
+  const residents = getResidents();
+  const filteredResidents = residents.filter(resident =>
     resident.name.toLowerCase().includes(residentSearchQuery.toLowerCase()) ||
     resident.email.toLowerCase().includes(residentSearchQuery.toLowerCase())
   );
@@ -196,72 +192,19 @@ export const KeyCardsPage = () => {
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label htmlFor="name">Name *</Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="name"
-                    value={newCard.name}
-                    onChange={(e) => setNewCard(prev => ({ ...prev, name: e.target.value }))}
-                    placeholder="Enter resident name"
-                    className="flex-1"
-                  />
-                  <Dialog open={isResidentDialogOpen} onOpenChange={setIsResidentDialogOpen}>
-                    <DialogTrigger asChild>
-                      <Button variant="outline" type="button">
-                        Link Resident
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-md">
-                      <DialogHeader>
-                        <DialogTitle>Select Resident</DialogTitle>
-                      </DialogHeader>
-                      <div className="space-y-4">
-                        <div className="relative">
-                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                          <Input
-                            placeholder="Search residents..."
-                            value={residentSearchQuery}
-                            onChange={(e) => setResidentSearchQuery(e.target.value)}
-                            className="pl-10"
-                          />
-                        </div>
-                        <div className="max-h-48 overflow-y-auto space-y-2">
-                          {filteredResidents.map(resident => (
-                            <div
-                              key={resident.id}
-                              onClick={() => setSelectedResidentForCard(resident.id)}
-                              className={`p-3 border rounded cursor-pointer hover:bg-gray-50 ${
-                                selectedResidentForCard === resident.id ? 'bg-blue-50 border-blue-200' : ''
-                              }`}
-                            >
-                              <div className="font-medium">{resident.name}</div>
-                              <div className="text-sm text-gray-500">{resident.email}</div>
-                            </div>
-                          ))}
-                        </div>
-                        <div className="flex gap-2 pt-4">
-                          <Button variant="outline" onClick={() => setIsResidentDialogOpen(false)} className="flex-1">
-                            Cancel
-                          </Button>
-                          <Button onClick={handleLinkResident} className="flex-1 bg-black text-white hover:bg-gray-800">
-                            Link Selected
-                          </Button>
-                        </div>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
-                </div>
-              </div>
-              
-              <div>
-                <Label htmlFor="email">Email *</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={newCard.email}
-                  onChange={(e) => setNewCard(prev => ({ ...prev, email: e.target.value }))}
-                  placeholder="Enter email address"
-                />
+                <Label htmlFor="resident">Select Resident *</Label>
+                <Select value={newCard.selectedResidentId} onValueChange={(value) => setNewCard(prev => ({ ...prev, selectedResidentId: value }))}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choose a resident" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {residents.map(resident => (
+                      <SelectItem key={resident.id} value={resident.id}>
+                        {resident.name} - {resident.houseNumber}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               
               <div>
@@ -278,40 +221,6 @@ export const KeyCardsPage = () => {
                 </Select>
               </div>
               
-              <div>
-                <Label htmlFor="photo">Passport Photograph</Label>
-                <div className="flex items-center gap-4">
-                  <Input
-                    id="photo"
-                    type="file"
-                    accept="image/*"
-                    onChange={handlePhotoUpload}
-                    className="hidden"
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => document.getElementById('photo')?.click()}
-                    className="flex items-center gap-2"
-                  >
-                    <Upload className="h-4 w-4" />
-                    Upload Photo
-                  </Button>
-                  {newCard.photo && (
-                    <div className="flex items-center gap-2">
-                      <img src={newCard.photo} alt="Preview" className="w-12 h-12 rounded object-cover" />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setNewCard(prev => ({ ...prev, photo: null }))}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </div>
               
               <div className="flex gap-2 pt-4">
                 <Button variant="outline" onClick={() => setIsDialogOpen(false)} className="flex-1">
@@ -325,6 +234,80 @@ export const KeyCardsPage = () => {
           </DialogContent>
         </Dialog>
       </div>
+
+      {/* Resident Details Dialog for Key Cards */}
+      <Dialog open={isResidentDialogOpen} onOpenChange={setIsResidentDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Resident Details</DialogTitle>
+          </DialogHeader>
+          {selectedResidentForCard && (
+            (() => {
+              const residents = getResidents();
+              const resident = residents.find(r => r.id === selectedResidentForCard);
+              const card = keyCards.find(c => c.name === resident?.name);
+              
+              if (!resident) return null;
+              
+              return (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-4">
+                    <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center text-xl font-semibold text-blue-600">
+                      {resident.name.split(' ').map((n: string) => n[0]).join('')}
+                    </div>
+                    <div>
+                      <h2 className="text-xl font-semibold">{resident.name}</h2>
+                      <p className="text-gray-600">{resident.email}</p>
+                      <p className="text-sm text-gray-500">{resident.houseNumber}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="font-medium">Phone:</span>
+                      <p>{resident.phone || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <span className="font-medium">Occupation:</span>
+                      <p>{resident.occupation || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <span className="font-medium">Key Card Status:</span>
+                      <Badge className={resident.keyCardStatus === 'Active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>
+                        {resident.keyCardStatus}
+                      </Badge>
+                    </div>
+                    <div>
+                      <span className="font-medium">Resident Since:</span>
+                      <p>{resident.residentSince || 'N/A'}</p>
+                    </div>
+                  </div>
+
+                  {card?.qrCode && (
+                    <div className="mt-4 pt-4 border-t">
+                      <h3 className="font-medium mb-2">QR Code</h3>
+                      <div className="flex justify-center">
+                        <img src={card.qrCode} alt="QR Code" className="w-32 h-32" />
+                      </div>
+                      <Button 
+                        className="w-full mt-2" 
+                        onClick={() => {
+                          toast({
+                            title: "QR Code Sent",
+                            description: `QR code sent to ${resident.email}`,
+                          });
+                        }}
+                      >
+                        Send QR Code to Email
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              );
+            })()
+          )}
+        </DialogContent>
+      </Dialog>
       
       <div className="flex items-center gap-4 mb-6">
         <div className="relative flex-1 max-w-md">
@@ -361,8 +344,21 @@ export const KeyCardsPage = () => {
                 <div className="w-6 h-6 bg-blue-500 rounded flex items-center justify-center">
                   <div className="w-4 h-4 bg-white rounded"></div>
                 </div>
-                <div>
+                <div 
+                  className="cursor-pointer"
+                  onClick={() => {
+                    const residents = getResidents();
+                    const resident = residents.find(r => r.name === card.name);
+                    if (resident) {
+                      // Create a dialog to show resident details with QR code
+                      const residentWithQR = { ...resident, qrCode: card.qrCode };
+                      setSelectedResidentForCard(resident.id);
+                      setIsResidentDialogOpen(true);
+                    }
+                  }}
+                >
                   <h3 className="font-semibold text-black">{card.id}</h3>
+                  {card.houseNumber && <p className="text-xs text-gray-500">{card.houseNumber}</p>}
                   <p className="text-sm text-gray-600">{card.name}</p>
                 </div>
               </div>
