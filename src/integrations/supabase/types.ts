@@ -20,12 +20,6 @@ export type Database = {
         Update: {}
         Relationships: []
       }
-      admins: {
-        Row: {}
-        Insert: {}
-        Update: {}
-        Relationships: []
-      }
     }
     Views: {
       [_ in never]: never
