@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -40,7 +41,8 @@ export const KeyCardsPage = () => {
   const [residentSearchQuery, setResidentSearchQuery] = useState("");
   const [newCard, setNewCard] = useState({ selectedResidentId: "", rentalStatus: "" });
   const { toast } = useToast();
-
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [cardToDelete, setCardToDelete] = useState<string | null>(null);
   const tabs = ["All", "Active", "Inactive", "Lost", "Expired"];
 
   const filteredCards = keyCards.filter(card => {
@@ -141,6 +143,25 @@ export const KeyCardsPage = () => {
       title: "Success",
       description: `Key card marked as ${action}`,
     });
+  };
+
+  const confirmDeleteCard = (id: string) => {
+    setCardToDelete(id);
+    setIsDeleteOpen(true);
+  };
+
+  const handleDeleteCard = () => {
+    if (cardToDelete) {
+      const updated = keyCards.filter(c => c.id !== cardToDelete);
+      setKeyCards(updated);
+      localStorage.setItem('keyCards', JSON.stringify(updated));
+      toast({
+        title: "Deleted",
+        description: "Key card deleted",
+      });
+    }
+    setIsDeleteOpen(false);
+    setCardToDelete(null);
   };
 
   const handleLinkResident = () => {
@@ -387,6 +408,9 @@ export const KeyCardsPage = () => {
                       Send QR to Email
                     </DropdownMenuItem>
                   )}
+                  <DropdownMenuItem onClick={() => confirmDeleteCard(card.id)}>
+                    Delete key card
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -427,6 +451,20 @@ export const KeyCardsPage = () => {
           </div>
         ))}
       </div>
+      <AlertDialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete key card?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone and will remove the key card from this device.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setIsDeleteOpen(false)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteCard}>Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
