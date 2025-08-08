@@ -10,6 +10,8 @@ import { KeyCardsPage } from "./KeyCardsPage";
 import { AccessLogsPage } from "./AccessLogsPage";
 import { ResidentsPage } from "./ResidentsPage";
 import { SettingsPage } from "./SettingsPage";
+import { supabase } from "@/integrations/supabase/client";
+import { UserManagementPage } from "./UserManagementPage";
 
 export const Dashboard = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -17,8 +19,9 @@ export const Dashboard = () => {
   const [activePage, setActivePage] = useState("Dashboard");
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    navigate("/");
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate("/auth");
   };
 
   const handleSearch = (e: React.FormEvent) => {
@@ -50,6 +53,7 @@ export const Dashboard = () => {
     { name: "Key Cards", icon: CreditCard },
     { name: "Access Log", icon: FileText },
     { name: "Residents", icon: Users },
+    { name: "User Management", icon: Users },
     { name: "Settings", icon: Settings },
   ];
 
@@ -67,6 +71,8 @@ export const Dashboard = () => {
         return <AccessLogsPage />;
       case "Residents":
         return <ResidentsPage />;
+      case "User Management":
+        return <UserManagementPage />;
       case "Settings":
         return <SettingsPage />;
       default:

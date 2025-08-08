@@ -7,6 +7,8 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import { Dashboard } from "./components/Dashboard";
 import { AddResidentPage } from "./components/AddResidentPage";
+import Auth from "./pages/Auth";
+import { RequireAuth } from "./components/RequireAuth";
 
 const queryClient = new QueryClient();
 
@@ -18,9 +20,11 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/residents" element={<Dashboard />} />
-          <Route path="/add-resident" element={<AddResidentPage />} />
+          <Route path="/auth" element={<Auth />} />
+
+          <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
+          <Route path="/residents" element={<RequireAuth><Dashboard /></RequireAuth>} />
+          <Route path="/add-resident" element={<RequireAuth><AddResidentPage /></RequireAuth>} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
