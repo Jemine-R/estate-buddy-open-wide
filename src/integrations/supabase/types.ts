@@ -20,15 +20,259 @@ export type Database = {
         Update: {}
         Relationships: []
       }
+      deleted_items_log: {
+        Row: {
+          deleted_at: string
+          deleted_by: string
+          id: string
+          item_id: string
+          item_type: string
+          metadata: Json | null
+          restore_deadline: string
+        }
+        Insert: {
+          deleted_at?: string
+          deleted_by: string
+          id?: string
+          item_id: string
+          item_type: string
+          metadata?: Json | null
+          restore_deadline?: string
+        }
+        Update: {
+          deleted_at?: string
+          deleted_by?: string
+          id?: string
+          item_id?: string
+          item_type?: string
+          metadata?: Json | null
+          restore_deadline?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deleted_items_log_deleted_by_fkey"
+            columns: ["deleted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      key_cards: {
+        Row: {
+          card_number: string
+          created_at: string
+          deleted_at: string | null
+          deleted_by: string | null
+          expires_at: string | null
+          id: string
+          issued_at: string
+          qr_code_url: string | null
+          resident_id: string
+          status: Database["public"]["Enums"]["key_card_status"]
+          updated_at: string
+        }
+        Insert: {
+          card_number: string
+          created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
+          expires_at?: string | null
+          id?: string
+          issued_at?: string
+          qr_code_url?: string | null
+          resident_id: string
+          status?: Database["public"]["Enums"]["key_card_status"]
+          updated_at?: string
+        }
+        Update: {
+          card_number?: string
+          created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
+          expires_at?: string | null
+          id?: string
+          issued_at?: string
+          qr_code_url?: string | null
+          resident_id?: string
+          status?: Database["public"]["Enums"]["key_card_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "key_cards_deleted_by_fkey"
+            columns: ["deleted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "key_cards_resident_id_fkey"
+            columns: ["resident_id"]
+            isOneToOne: false
+            referencedRelation: "residents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      residents: {
+        Row: {
+          created_at: string
+          deleted_at: string | null
+          deleted_by: string | null
+          email: string | null
+          full_name: string
+          house_number: string | null
+          id: string
+          occupation: string | null
+          phone: string | null
+          photo_url: string | null
+          rent_status: string | null
+          resident_since: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
+          email?: string | null
+          full_name: string
+          house_number?: string | null
+          id?: string
+          occupation?: string | null
+          phone?: string | null
+          photo_url?: string | null
+          rent_status?: string | null
+          resident_since?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
+          email?: string | null
+          full_name?: string
+          house_number?: string | null
+          id?: string
+          occupation?: string | null
+          phone?: string | null
+          photo_url?: string | null
+          rent_status?: string | null
+          resident_since?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "residents_deleted_by_fkey"
+            columns: ["deleted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
-      [_ in never]: never
+      recoverable_key_cards: {
+        Row: {
+          can_restore: boolean | null
+          card_number: string | null
+          deleted_at: string | null
+          deleted_by: string | null
+          deleted_by_name: string | null
+          id: string | null
+          resident_id: string | null
+          resident_name: string | null
+          restore_deadline: string | null
+          status: Database["public"]["Enums"]["key_card_status"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "key_cards_deleted_by_fkey"
+            columns: ["deleted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "key_cards_resident_id_fkey"
+            columns: ["resident_id"]
+            isOneToOne: false
+            referencedRelation: "residents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _user_id: string
+          _role: Database["public"]["Enums"]["app_role"]
+        }
+        Returns: boolean
+      }
+      is_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      restore_key_card: {
+        Args: { card_id: string }
+        Returns: boolean
+      }
+      soft_delete_key_card: {
+        Args: { card_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "manager" | "user"
+      key_card_status: "ACTIVE" | "INACTIVE" | "LOST" | "EXPIRED"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -155,6 +399,9 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "manager", "user"],
+      key_card_status: ["ACTIVE", "INACTIVE", "LOST", "EXPIRED"],
+    },
   },
 } as const
