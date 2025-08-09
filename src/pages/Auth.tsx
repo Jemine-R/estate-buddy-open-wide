@@ -12,6 +12,7 @@ const Auth = () => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [notice, setNotice] = useState("");
+  const [authMode, setAuthMode] = useState<"login" | "signup">("login");
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -50,6 +51,27 @@ const Auth = () => {
     toast({ title: "Signed in", description: "Checking verification…" });
   };
 
+  const signUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setNotice("");
+    const redirectUrl = `${window.location.origin}/`;
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: redirectUrl,
+      },
+    });
+    setLoading(false);
+    if (error) {
+      toast({ title: "Sign up failed", description: error.message, variant: "destructive" });
+      return;
+    }
+    setNotice("Account created. Please check your email to verify your address.");
+    toast({ title: "Sign up successful", description: "Verification email sent." });
+  };
+
   const resendVerification = async () => {
     if (!email) {
       toast({ title: "Email required", description: "Enter your email above to resend verification.", variant: "destructive" });
@@ -82,13 +104,38 @@ const Auth = () => {
               </div>
             </div>
           )}
-          <form onSubmit={signIn} className="space-y-3 pt-4">
+          <form onSubmit={(e) => (authMode === "signup" ? signUp(e) : signIn(e))} className="space-y-3 pt-4">
             <Input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
             <Input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required />
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Please wait…" : "Log in"}
+              {loading ? "Please wait…" : authMode === "signup" ? "Create account" : "Log in"}
             </Button>
           </form>
+          <div className="pt-2 text-center text-sm text-muted-foreground">
+            {authMode === "login" ? (
+              <>
+                Don&apos;t have an account?{" "}
+                <button
+                  type="button"
+                  className="underline underline-offset-4"
+                  onClick={() => setAuthMode("signup")}
+                >
+                  Sign up
+                </button>
+              </>
+            ) : (
+              <>
+                Already have an account?{" "}
+                <button
+                  type="button"
+                  className="underline underline-offset-4"
+                  onClick={() => setAuthMode("login")}
+                >
+                  Log in
+                </button>
+              </>
+            )}
+          </div>
         </CardContent>
       </Card>
     </div>
