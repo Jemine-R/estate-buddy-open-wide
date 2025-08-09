@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
@@ -50,23 +50,19 @@ const Auth = () => {
     toast({ title: "Signed in", description: "Checking verification…" });
   };
 
-  const signUp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setNotice("");
-    const redirectUrl = `${window.location.origin}/auth`;
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { emailRedirectTo: redirectUrl },
-    });
-    setLoading(false);
-    if (error) {
-      toast({ title: "Signup failed", description: error.message, variant: "destructive" });
+  const resendVerification = async () => {
+    if (!email) {
+      toast({ title: "Email required", description: "Enter your email above to resend verification.", variant: "destructive" });
       return;
     }
-    setNotice("Verification email sent. Please check your inbox.");
-    toast({ title: "Verify your email", description: "We sent you a confirmation link." });
+    setLoading(true);
+    const { error } = await supabase.auth.resend({ type: "signup", email });
+    setLoading(false);
+    if (error) {
+      toast({ title: "Resend failed", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Verification sent", description: "Check your inbox for the confirmation link." });
   };
 
   return (
@@ -77,33 +73,22 @@ const Auth = () => {
         </CardHeader>
         <CardContent>
           {notice && (
-            <div className="mb-4 text-sm text-muted-foreground text-center">{notice}</div>
+            <div className="mb-4 text-sm text-muted-foreground text-center">
+              {notice}
+              <div className="mt-2">
+                <Button variant="secondary" size="sm" onClick={resendVerification} disabled={loading}>
+                  {loading ? "Resending…" : "Resend verification email"}
+                </Button>
+              </div>
+            </div>
           )}
-          <Tabs defaultValue="login">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="login">Log in</TabsTrigger>
-              <TabsTrigger value="signup">Sign up</TabsTrigger>
-            </TabsList>
-            <TabsContent value="login" className="space-y-4 pt-4">
-              <form onSubmit={signIn} className="space-y-3">
-                <Input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-                <Input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? "Please wait…" : "Log in"}
-                </Button>
-              </form>
-            </TabsContent>
-            <TabsContent value="signup" className="space-y-4 pt-4">
-              <form onSubmit={signUp} className="space-y-3">
-                <Input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-                <Input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? "Please wait…" : "Create account"}
-                </Button>
-              </form>
-              <p className="text-xs text-muted-foreground text-center">You'll need to verify your email before accessing the app.</p>
-            </TabsContent>
-          </Tabs>
+          <form onSubmit={signIn} className="space-y-3 pt-4">
+            <Input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+            <Input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? "Please wait…" : "Log in"}
+            </Button>
+          </form>
         </CardContent>
       </Card>
     </div>
