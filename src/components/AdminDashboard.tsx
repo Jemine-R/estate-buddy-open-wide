@@ -49,6 +49,63 @@ export const AdminDashboard = () => {
 
   useEffect(() => {
     initializeData();
+
+    // Set up real-time subscriptions for live updates across devices
+    const profilesChannel = supabase
+      .channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'profiles'
+        },
+        () => {
+          console.log('Profiles updated, refreshing data...');
+          initializeData();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public', 
+          table: 'user_roles'
+        },
+        () => {
+          console.log('User roles updated, refreshing data...');
+          initializeData();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'residents'
+        },
+        () => {
+          console.log('Residents updated, refreshing data...');
+          initializeData();
+        }
+      )
+      .on(
+        'postgres_changes', 
+        {
+          event: '*',
+          schema: 'public',
+          table: 'key_cards'
+        },
+        () => {
+          console.log('Key cards updated, refreshing data...');
+          initializeData();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(profilesChannel);
+    };
   }, []);
 
   const initializeData = async () => {
@@ -147,7 +204,7 @@ export const AdminDashboard = () => {
       } : null);
 
       toast({ title: 'Success', description: 'Profile updated successfully' });
-      await initializeData();
+      // Real-time will automatically refresh data
     } catch (error: any) {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
     } finally {
@@ -197,10 +254,11 @@ export const AdminDashboard = () => {
 
     setLoading(true);
     try {
-      // Create user account
+      // Create user account with email confirmation disabled for admin creation
       const { data, error } = await supabase.auth.admin.createUser({
         email: newUserForm.email,
         password: newUserForm.password,
+        email_confirm: true, // Auto-confirm email for admin-created users
         user_metadata: {
           full_name: newUserForm.full_name,
         }
@@ -216,10 +274,13 @@ export const AdminDashboard = () => {
         });
       }
 
-      toast({ title: 'Success', description: 'User created successfully' });
+      toast({ 
+        title: 'Success', 
+        description: `User created successfully. ${newUserForm.role === 'admin' ? 'Admin privileges granted.' : ''}`,
+      });
       setCreateUserDialog(false);
       setNewUserForm({ email: '', password: '', full_name: '', role: 'user' });
-      await initializeData();
+      // Real-time will automatically refresh data
     } catch (error: any) {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
     } finally {
@@ -250,14 +311,13 @@ export const AdminDashboard = () => {
       if (makeAdmin) {
         const { error } = await supabase.from('user_roles').insert({ user_id: userId, role: 'admin' });
         if (error) throw error;
-        setAdminIds(prev => new Set(prev).add(userId));
-        toast({ title: 'Success', description: 'User is now an admin' });
+        toast({ title: 'Success', description: 'User is now an admin - changes will sync across all devices' });
       } else {
         const { error } = await supabase.from('user_roles').delete().eq('user_id', userId).eq('role', 'admin');
         if (error) throw error;
-        setAdminIds(prev => { const n = new Set(prev); n.delete(userId); return n; });
-        toast({ title: 'Success', description: 'Admin role removed' });
+        toast({ title: 'Success', description: 'Admin role removed - changes will sync across all devices' });
       }
+      // Real-time will automatically update the UI
     } catch (error: any) {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
     } finally {
