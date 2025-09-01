@@ -9,9 +9,8 @@ import { DoorAccessPage } from "./DoorAccessPage";
 import { KeyCardsPage } from "./KeyCardsPage";
 import { AccessLogsPage } from "./AccessLogsPage";
 import { ResidentsPage } from "./ResidentsPage";
-import { SettingsPage } from "./SettingsPage";
+import { AdminDashboard } from "./AdminDashboard";
 import { supabase } from "@/integrations/supabase/client";
-import { UserManagementPage } from "./UserManagementPage";
 
 export const Dashboard = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -30,8 +29,8 @@ export const Dashboard = () => {
     // Global search functionality
     const query = searchQuery.toLowerCase();
     
-    if (query.includes("settings") || query.includes("admin") || query.includes("password")) {
-      setActivePage("Settings");
+    if (query.includes("settings") || query.includes("admin") || query.includes("password") || query.includes("user management")) {
+      setActivePage("Admin Panel");
     } else if (query.includes("door") || query.includes("access") || query.includes("main entrance")) {
       setActivePage("Door Access");
     } else if (query.includes("keycard") || query.includes("key card") || query.includes("card")) {
@@ -53,8 +52,7 @@ export const Dashboard = () => {
     { name: "Key Cards", icon: CreditCard },
     { name: "Access Log", icon: FileText },
     { name: "Residents", icon: Users },
-    { name: "User Management", icon: Users },
-    { name: "Settings", icon: Settings },
+    { name: "Admin Panel", icon: Settings },
   ];
 
   const handlePageChange = (pageName: string) => {
@@ -71,10 +69,8 @@ export const Dashboard = () => {
         return <AccessLogsPage />;
       case "Residents":
         return <ResidentsPage />;
-      case "User Management":
-        return <UserManagementPage />;
-      case "Settings":
-        return <SettingsPage />;
+      case "Admin Panel":
+        return <AdminDashboard />;
       default:
         return (
           <div className="p-6">
