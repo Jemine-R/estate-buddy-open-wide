@@ -10,6 +10,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Upload, X, Eye, EyeOff, Plus, Mail, Key, User, Users, Settings } from "lucide-react";
+import { ResidentsManagement } from "./admin/ResidentsManagement";
+import { KeyCardsManagement } from "./admin/KeyCardsManagement";  
+import { SystemSettings } from "./admin/SystemSettings";
 
 interface Profile {
   id: string;
@@ -350,14 +353,26 @@ export const AdminDashboard = () => {
       </div>
 
       <Tabs defaultValue="profile" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="profile" className="flex items-center gap-2">
             <User className="h-4 w-4" />
-            My Profile
+            Profile
           </TabsTrigger>
           <TabsTrigger value="users" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
-            User Management
+            Users
+          </TabsTrigger>
+          <TabsTrigger value="residents" className="flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            Residents
+          </TabsTrigger>
+          <TabsTrigger value="keycards" className="flex items-center gap-2">
+            <Key className="h-4 w-4" />
+            Key Cards
+          </TabsTrigger>
+          <TabsTrigger value="system" className="flex items-center gap-2">
+            <Settings className="h-4 w-4" />
+            System
           </TabsTrigger>
           <TabsTrigger value="security" className="flex items-center gap-2">
             <Key className="h-4 w-4" />
@@ -552,6 +567,18 @@ export const AdminDashboard = () => {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="residents">
+          <ResidentsManagement />
+        </TabsContent>
+
+        <TabsContent value="keycards">
+          <KeyCardsManagement />
+        </TabsContent>
+
+        <TabsContent value="system">
+          <SystemSettings />
         </TabsContent>
 
         <TabsContent value="security">
