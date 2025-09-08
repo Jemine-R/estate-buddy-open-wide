@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { Upload, X, Eye, EyeOff, Plus, Mail, Key, User, Users, Settings } from "lucide-react";
 import { ResidentsManagement } from "./admin/ResidentsManagement";
@@ -29,7 +30,7 @@ export const AdminDashboard = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
-  const [createUserDialog, setCreateUserDialog] = useState(false);
+  const [showCreateUserDialog, setShowCreateUserDialog] = useState(false);
   
   // Form states
   const [profileForm, setProfileForm] = useState({
@@ -41,11 +42,13 @@ export const AdminDashboard = () => {
     confirmPassword: "",
   });
 
-  const [newUserForm, setNewUserForm] = useState({
-    email: "",
-    password: "",
-    full_name: "",
-    role: "user" as "user" | "admin",
+  const [newUser, setNewUser] = useState({
+    email: '',
+    username: '',
+    fullName: '',
+    password: '',
+    isAdmin: false,
+    requireVerification: true
   });
 
   const { toast } = useToast();
@@ -250,27 +253,33 @@ export const AdminDashboard = () => {
   };
 
   const handleCreateUser = async () => {
-    if (!newUserForm.email || !newUserForm.password) {
-      toast({ title: 'Error', description: 'Email and password are required', variant: 'destructive' });
+    if (!newUser.email || !newUser.password || !newUser.fullName || !newUser.username) {
+      toast({ title: 'Error', description: 'All fields are required', variant: 'destructive' });
+      return;
+    }
+
+    if (newUser.password.length < 6) {
+      toast({ title: 'Error', description: 'Password must be at least 6 characters', variant: 'destructive' });
       return;
     }
 
     setLoading(true);
     try {
-      // Create user account with email confirmation disabled for admin creation
+      // Create user account with proper email confirmation settings
       const { data, error } = await supabase.auth.admin.createUser({
-        email: newUserForm.email,
-        password: newUserForm.password,
-        email_confirm: true, // Auto-confirm email for admin-created users
+        email: newUser.email,
+        password: newUser.password,
+        email_confirm: !newUser.requireVerification, // Auto-confirm if verification not required
         user_metadata: {
-          full_name: newUserForm.full_name,
+          full_name: newUser.fullName,
+          username: newUser.username,
         }
       });
 
       if (error) throw error;
 
-      // Add role if admin
-      if (newUserForm.role === 'admin' && data.user) {
+      // Add admin role if specified
+      if (newUser.isAdmin && data.user) {
         await supabase.from('user_roles').insert({
           user_id: data.user.id,
           role: 'admin'
@@ -279,10 +288,19 @@ export const AdminDashboard = () => {
 
       toast({ 
         title: 'Success', 
-        description: `User created successfully. ${newUserForm.role === 'admin' ? 'Admin privileges granted.' : ''}`,
+        description: `User ${newUser.username} created successfully. ${newUser.isAdmin ? 'Admin privileges granted.' : ''}`,
       });
-      setCreateUserDialog(false);
-      setNewUserForm({ email: '', password: '', full_name: '', role: 'user' });
+      
+      setShowCreateUserDialog(false);
+      setNewUser({
+        email: '',
+        username: '',
+        fullName: '',
+        password: '',
+        isAdmin: false,
+        requireVerification: true
+      });
+      
       // Real-time will automatically refresh data
     } catch (error: any) {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
@@ -457,59 +475,99 @@ export const AdminDashboard = () => {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>User Management</CardTitle>
-              <Dialog open={createUserDialog} onOpenChange={setCreateUserDialog}>
+              <Dialog open={showCreateUserDialog} onOpenChange={setShowCreateUserDialog}>
                 <DialogTrigger asChild>
                   <Button className="flex items-center gap-2">
                     <Plus className="h-4 w-4" />
                     Create User
                   </Button>
                 </DialogTrigger>
-                <DialogContent>
+                <DialogContent className="max-w-md">
                   <DialogHeader>
                     <DialogTitle>Create New User</DialogTitle>
                   </DialogHeader>
+                  
                   <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label>Email</Label>
+                    <div>
+                      <Label htmlFor="email">Email</Label>
                       <Input
+                        id="email"
                         type="email"
-                        value={newUserForm.email}
-                        onChange={(e) => setNewUserForm(prev => ({ ...prev, email: e.target.value }))}
-                        placeholder="user@example.com"
+                        value={newUser.email}
+                        onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+                        placeholder="Enter email address"
+                        className="mt-1"
+                        required
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label>Password</Label>
+                    
+                    <div>
+                      <Label htmlFor="username">Username</Label>
                       <Input
+                        id="username"
+                        type="text"
+                        value={newUser.username}
+                        onChange={(e) => setNewUser({ ...newUser, username: e.target.value })}
+                        placeholder="Enter username"
+                        className="mt-1"
+                        required
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="fullName">Full Name</Label>
+                      <Input
+                        id="fullName"
+                        type="text"
+                        value={newUser.fullName}
+                        onChange={(e) => setNewUser({ ...newUser, fullName: e.target.value })}
+                        placeholder="Enter full name"
+                        className="mt-1"
+                        required
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="password">Password</Label>
+                      <Input
+                        id="password"
                         type="password"
-                        value={newUserForm.password}
-                        onChange={(e) => setNewUserForm(prev => ({ ...prev, password: e.target.value }))}
-                        placeholder="Secure password"
+                        value={newUser.password}
+                        onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
+                        placeholder="Enter password (min 6 characters)"
+                        className="mt-1"
+                        required
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label>Full Name</Label>
-                      <Input
-                        value={newUserForm.full_name}
-                        onChange={(e) => setNewUserForm(prev => ({ ...prev, full_name: e.target.value }))}
-                        placeholder="John Doe"
+                    
+                    <div className="flex items-center space-x-2">
+                      <input 
+                        type="checkbox"
+                        id="isAdmin" 
+                        checked={newUser.isAdmin}
+                        onChange={(e) => setNewUser({ ...newUser, isAdmin: e.target.checked })}
+                        className="rounded"
                       />
+                      <Label htmlFor="isAdmin">Grant admin privileges</Label>
                     </div>
-                    <div className="flex gap-2">
-                      <Button
-                        variant={newUserForm.role === 'user' ? 'default' : 'outline'}
-                        onClick={() => setNewUserForm(prev => ({ ...prev, role: 'user' }))}
-                      >
-                        User
-                      </Button>
-                      <Button
-                        variant={newUserForm.role === 'admin' ? 'default' : 'outline'}
-                        onClick={() => setNewUserForm(prev => ({ ...prev, role: 'admin' }))}
-                      >
-                        Admin
-                      </Button>
+                    
+                    <div className="flex items-center space-x-2">
+                      <input 
+                        type="checkbox"
+                        id="requireVerification" 
+                        checked={newUser.requireVerification}
+                        onChange={(e) => setNewUser({ ...newUser, requireVerification: e.target.checked })}
+                        className="rounded"
+                      />
+                      <Label htmlFor="requireVerification">Require email verification</Label>
                     </div>
-                    <Button onClick={handleCreateUser} disabled={loading} className="w-full">
+                  </div>
+                  
+                  <div className="flex justify-end gap-2 mt-6">
+                    <Button variant="outline" onClick={() => setShowCreateUserDialog(false)}>
+                      Cancel
+                    </Button>
+                    <Button onClick={handleCreateUser} disabled={!newUser.email || !newUser.password || !newUser.fullName || !newUser.username}>
                       Create User
                     </Button>
                   </div>

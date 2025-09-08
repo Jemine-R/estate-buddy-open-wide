@@ -1,40 +1,115 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
+import { supabase } from "@/integrations/supabase/client";
+import { formatDistanceToNow } from "date-fns";
+
+interface Notification {
+  id: string;
+  type: "keycard" | "resident";
+  message: string;
+  time: string;
+  read: boolean;
+  created_at: string;
+}
 
 export const NotificationBell = () => {
-  const [notifications] = useState([
-    {
-      id: 1,
-      type: "keycard",
-      message: "New key card KC-9876 registered for Maria Garcia",
-      time: "2 minutes ago",
-      read: false,
-    },
-    {
-      id: 2,
-      type: "resident",
-      message: "New resident David Wilson added to apartment B-410",
-      time: "15 minutes ago",
-      read: false,
-    },
-    {
-      id: 3,
-      type: "keycard",
-      message: "Key card KC-5432 status changed to LOST",
-      time: "1 hour ago",
-      read: true,
-    },
-    {
-      id: 4,
-      type: "resident",
-      message: "Resident Sarah Brown updated contact information",
-      time: "3 hours ago",
-      read: true,
-    },
-  ]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadNotifications();
+    
+    // Set up real-time subscriptions
+    const keyCardsChannel = supabase
+      .channel('key-cards-notifications')
+      .on('postgres_changes', 
+        { event: '*', schema: 'public', table: 'key_cards' }, 
+        () => loadNotifications()
+      )
+      .subscribe();
+
+    const residentsChannel = supabase
+      .channel('residents-notifications')
+      .on('postgres_changes', 
+        { event: '*', schema: 'public', table: 'residents' }, 
+        () => loadNotifications()
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(keyCardsChannel);
+      supabase.removeChannel(residentsChannel);
+    };
+  }, []);
+
+  const loadNotifications = async () => {
+    try {
+      const notifications: Notification[] = [];
+
+      // Get recent key card activities
+      const { data: keyCards } = await supabase
+        .from('key_cards')
+        .select(`
+          id,
+          card_number,
+          status,
+          issued_at,
+          updated_at,
+          residents!inner(full_name)
+        `)
+        .is('deleted_at', null)
+        .order('updated_at', { ascending: false })
+        .limit(3);
+
+      if (keyCards) {
+        keyCards.forEach(card => {
+          notifications.push({
+            id: `keycard-${card.id}`,
+            type: "keycard",
+            message: card.status === 'LOST' 
+              ? `Key card ${card.card_number} status changed to LOST`
+              : `New key card ${card.card_number} registered for ${(card.residents as any)?.full_name}`,
+            time: formatDistanceToNow(new Date(card.updated_at), { addSuffix: true }),
+            read: Math.random() > 0.5, // Random read status for demo
+            created_at: card.updated_at
+          });
+        });
+      }
+
+      // Get recent resident activities  
+      const { data: residents } = await supabase
+        .from('residents')
+        .select('id, full_name, house_number, created_at, updated_at')
+        .is('deleted_at', null)
+        .order('updated_at', { ascending: false })
+        .limit(3);
+
+      if (residents) {
+        residents.forEach(resident => {
+          notifications.push({
+            id: `resident-${resident.id}`,
+            type: "resident",
+            message: `New resident ${resident.full_name} added${resident.house_number ? ` to ${resident.house_number}` : ''}`,
+            time: formatDistanceToNow(new Date(resident.updated_at), { addSuffix: true }),
+            read: Math.random() > 0.5, // Random read status for demo
+            created_at: resident.updated_at
+          });
+        });
+      }
+
+      // Sort by creation time and take latest 6
+      notifications.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      setNotifications(notifications.slice(0, 6));
+
+    } catch (error) {
+      console.error('Error loading notifications:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const unreadCount = notifications.filter(n => !n.read).length;
 

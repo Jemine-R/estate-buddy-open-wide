@@ -10,6 +10,8 @@ import { KeyCardsPage } from "./KeyCardsPage";
 import { AccessLogsPage } from "./AccessLogsPage";
 import { ResidentsPage } from "./ResidentsPage";
 import { AdminDashboard } from "./AdminDashboard";
+import { DashboardStats } from "./DashboardStats";
+import { DashboardActivities } from "./DashboardActivities";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Dashboard = () => {
@@ -74,71 +76,8 @@ export const Dashboard = () => {
       default:
         return (
           <div className="p-6">
-            {/* Stats Grid */}
-            <div className="grid grid-cols-4 gap-6 mb-8">
-              <div className="bg-white rounded-lg border border-gray-200 p-6">
-                <div className="text-sm text-gray-500 mb-2">Total Residents</div>
-                <div className="text-3xl font-bold text-black mb-2">300</div>
-                <div className="text-xs text-green-600">+5 this week</div>
-              </div>
-              
-              <div className="bg-white rounded-lg border border-gray-200 p-6">
-                <div className="text-sm text-gray-500 mb-2">Active Key Cards</div>
-                <div className="text-3xl font-bold text-black mb-2">205</div>
-                <div className="text-xs text-blue-600">12 new issued</div>
-              </div>
-              
-              <div className="bg-white rounded-lg border border-gray-200 p-6">
-                <div className="text-sm text-gray-500 mb-2">Door Access Events</div>
-                <div className="text-3xl font-bold text-black mb-2">847</div>
-                <div className="text-xs text-gray-500">Today</div>
-              </div>
-              
-              <div className="bg-white rounded-lg border border-gray-200 p-6">
-                <div className="text-sm text-gray-500 mb-2">Rent Overdue</div>
-                <div className="text-3xl font-bold text-red-600 mb-2">12</div>
-                <div className="text-xs text-red-600">Needs attention</div>
-              </div>
-            </div>
-
-            {/* Recent Activity Summary */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="bg-white rounded-lg border border-gray-200 p-6">
-                <h3 className="text-lg font-semibold text-black mb-4">Recent Key Card Activity</h3>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between p-3 bg-green-50 rounded">
-                    <span className="text-sm">New card issued to John Smith</span>
-                    <span className="text-xs text-gray-500">2 hours ago</span>
-                  </div>
-                  <div className="flex items-center justify-between p-3 bg-red-50 rounded">
-                    <span className="text-sm">Card KC-1234 marked as lost</span>
-                    <span className="text-xs text-gray-500">5 hours ago</span>
-                  </div>
-                  <div className="flex items-center justify-between p-3 bg-blue-50 rounded">
-                    <span className="text-sm">QR code sent to Maria Garcia</span>
-                    <span className="text-xs text-gray-500">1 day ago</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-lg border border-gray-200 p-6">
-                <h3 className="text-lg font-semibold text-black mb-4">Resident Status Summary</h3>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between p-3 bg-yellow-50 rounded">
-                    <span className="text-sm">15 residents with rent due soon</span>
-                    <span className="text-xs text-yellow-600">Action needed</span>
-                  </div>
-                  <div className="flex items-center justify-between p-3 bg-green-50 rounded">
-                    <span className="text-sm">3 new residents added this week</span>
-                    <span className="text-xs text-green-600">Growing</span>
-                  </div>
-                  <div className="flex items-center justify-between p-3 bg-blue-50 rounded">
-                    <span className="text-sm">Door access configured for Block A</span>
-                    <span className="text-xs text-blue-600">Updated</span>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <DashboardStats />
+            <DashboardActivities />
           </div>
         );
     }
