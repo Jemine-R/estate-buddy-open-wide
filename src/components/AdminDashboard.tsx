@@ -116,16 +116,38 @@ export const AdminDashboard = () => {
 
   const initializeData = async () => {
     try {
+      console.log('🔍 AdminDashboard: Starting initialization...');
+      
       const [{ data: userData }, { data: isAdminData }] = await Promise.all([
         supabase.auth.getUser(),
         supabase.rpc('is_admin'),
       ]);
 
-      if (!userData.user) return;
+      console.log('👤 User data:', userData.user?.email);
+      console.log('🔐 Is admin check result:', isAdminData);
+
+      if (!userData.user) {
+        console.log('❌ No user found - user not authenticated');
+        return;
+      }
+      
+      // Check user roles directly for debugging
+      const { data: userRoles, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userData.user.id);
+      
+      console.log('📋 User roles from database:', userRoles);
+      if (rolesError) console.log('❌ Error fetching roles:', rolesError);
       
       setIsAdmin(Boolean(isAdminData));
       
-      if (!isAdminData) return;
+      if (!isAdminData) {
+        console.log('🚫 User is not admin - showing access denied');
+        return;
+      }
+
+      console.log('✅ User is admin - loading admin data');
 
       // Load current user profile
       const { data: userProfile } = await supabase
