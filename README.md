@@ -1,73 +1,85 @@
-# Welcome to your Lovable project
+# 🏡 Estate Buddy
 
-## Project info
+A modern real-estate management app built with **React, TypeScript, TailwindCSS, and shadcn-ui**.
 
-**URL**: https://lovable.dev/projects/bcb77dc8-b746-405e-97ea-4201a78db43c
+🔗 **Live Project:** [Estate Buddy on Lovable](https://lovable.dev/projects/bcb77dc8-b746-405e-97ea-4201a78db43c)
 
-## How can I edit this code?
+---
 
-There are several ways of editing your application.
+## 🚀 Getting Started
 
-**Use Lovable**
+### 1. Clone the Repository
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/bcb77dc8-b746-405e-97ea-4201a78db43c) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
+```bash
 git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
 cd <YOUR_PROJECT_NAME>
+```
 
-# Step 3: Install the necessary dependencies.
-npm i
+### 2. Install Dependencies
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+```bash
+npm install
+```
+
+### 3. Start the Development Server
+
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+> 💡 Requires **Node.js & npm** installed. [Install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+---
 
-**Use GitHub Codespaces**
+## 🛠 Development Options
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+### 🔹 Use Your Preferred IDE
 
-## What technologies are used for this project?
+Clone, edit, and push changes directly from your IDE. Updates will sync with **Lovable**.
 
-This project is built with:
+### 🔹 Edit on GitHub
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+1. Open the desired file.
+2. Click the ✏️ **Edit** button.
+3. Make changes, commit, and push.
 
-## How can I deploy this project?
+### 🔹 GitHub Codespaces
 
-Simply open [Lovable](https://lovable.dev/projects/bcb77dc8-b746-405e-97ea-4201a78db43c) and click on Share -> Publish.
+1. Click the green **Code** button.
+2. Open the **Codespaces** tab.
+3. Launch a new Codespace.
+4. Edit, commit, and push your changes directly.
 
-## Can I connect a custom domain to my Lovable project?
+---
 
-Yes, you can!
+## 🧰 Tech Stack
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+* ⚡ Vite
+* ⚛️ React
+* 📘 TypeScript
+* 🎨 Tailwind CSS
+* 🧩 shadcn-ui
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+---
+
+## 🌍 Deployment
+
+Deploy instantly with **Lovable**:
+
+1. Open your project in [Lovable](https://lovable.dev/projects/bcb77dc8-b746-405e-97ea-4201a78db43c).
+2. Click **Share → Publish**.
+
+### Custom Domain
+
+Yes, you can connect one!
+
+* Go to **Project > Settings > Domains** → **Connect Domain**
+* Full guide: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+
+---
+
+ Happy coding with **Estate Buddy**!
+
+---
+
+Would you like me to also create a **GitHub profile-style intro section** (like a banner with badges, profile views, tech logos) so your README stands out more visually?
