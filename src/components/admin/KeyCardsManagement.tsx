@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -25,6 +26,7 @@ interface KeyCard {
     full_name: string;
     email: string | null;
     house_number: string | null;
+    photo_url: string | null;
   };
 }
 
@@ -65,7 +67,8 @@ export const KeyCardsManagement = () => {
           residents:resident_id (
             full_name,
             email,
-            house_number
+            house_number,
+            photo_url
           )
         `)
         .is('deleted_at', null)
@@ -325,9 +328,12 @@ export const KeyCardsManagement = () => {
             <div key={card.id} className="border rounded-lg p-4">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-primary/10 rounded flex items-center justify-center">
-                    <Key className="h-4 w-4" />
-                  </div>
+                  <Avatar className="h-12 w-12">
+                    <AvatarImage src={card.resident?.photo_url || ""} alt={card.resident?.full_name} />
+                    <AvatarFallback className="bg-primary/10">
+                      {card.resident?.full_name.split(' ').map(n => n[0]).join('') || <Key className="h-4 w-4" />}
+                    </AvatarFallback>
+                  </Avatar>
                   <div>
                     <h3 className="font-semibold">{card.card_number}</h3>
                     <p className="text-sm text-muted-foreground">{card.resident?.full_name}</p>
