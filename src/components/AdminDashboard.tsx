@@ -48,7 +48,9 @@ export const AdminDashboard = () => {
     fullName: '',
     password: '',
     isAdmin: false,
-    requireVerification: true
+    requireVerification: true,
+    photoFile: null as File | null,
+    photoPreview: ''
   });
 
   const { toast } = useToast();
@@ -274,9 +276,42 @@ export const AdminDashboard = () => {
     }
   };
 
+  const handleNewUserPhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast({ title: 'Error', description: 'Please upload an image file', variant: 'destructive' });
+      return;
+    }
+
+    // Create preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setNewUser(prev => ({ 
+        ...prev, 
+        photoFile: file,
+        photoPreview: reader.result as string 
+      }));
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleCreateUser = async () => {
+    // Check max users limit (10)
+    if (profiles.length >= 10) {
+      toast({ title: 'Error', description: 'Maximum of 10 users allowed', variant: 'destructive' });
+      return;
+    }
+
     if (!newUser.email || !newUser.password || !newUser.fullName || !newUser.username) {
       toast({ title: 'Error', description: 'All fields are required', variant: 'destructive' });
+      return;
+    }
+
+    if (!newUser.photoFile) {
+      toast({ title: 'Error', description: 'Passport photo is required', variant: 'destructive' });
       return;
     }
 
@@ -291,7 +326,7 @@ export const AdminDashboard = () => {
       const { data, error } = await supabase.auth.admin.createUser({
         email: newUser.email,
         password: newUser.password,
-        email_confirm: !newUser.requireVerification, // Auto-confirm if verification not required
+        email_confirm: !newUser.requireVerification,
         user_metadata: {
           full_name: newUser.fullName,
           username: newUser.username,
@@ -299,6 +334,32 @@ export const AdminDashboard = () => {
       });
 
       if (error) throw error;
+
+      let photoUrl = '';
+      
+      // Upload passport photo
+      if (newUser.photoFile && data.user) {
+        const fileExt = newUser.photoFile.name.split('.').pop();
+        const fileName = `${data.user.id}-${Date.now()}.${fileExt}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('avatars')
+          .upload(fileName, newUser.photoFile);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('avatars')
+          .getPublicUrl(fileName);
+
+        photoUrl = publicUrl;
+
+        // Update profile with photo
+        await supabase
+          .from('profiles')
+          .update({ avatar_url: photoUrl })
+          .eq('id', data.user.id);
+      }
 
       // Add admin role if specified
       if (newUser.isAdmin && data.user) {
@@ -310,7 +371,7 @@ export const AdminDashboard = () => {
 
       toast({ 
         title: 'Success', 
-        description: `User ${newUser.username} created successfully. ${newUser.isAdmin ? 'Admin privileges granted.' : ''}`,
+        description: `User ${newUser.username} created successfully. ${newUser.isAdmin ? 'Admin privileges granted.' : ''} Changes will sync across all devices.`,
       });
       
       setShowCreateUserDialog(false);
@@ -320,7 +381,9 @@ export const AdminDashboard = () => {
         fullName: '',
         password: '',
         isAdmin: false,
-        requireVerification: true
+        requireVerification: true,
+        photoFile: null,
+        photoPreview: ''
       });
       
       // Real-time will automatically refresh data
@@ -496,48 +559,72 @@ export const AdminDashboard = () => {
         <TabsContent value="users">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>User Management</CardTitle>
+              <div>
+                <CardTitle>User Management</CardTitle>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {profiles.length} of 10 users
+                </p>
+              </div>
               <Dialog open={showCreateUserDialog} onOpenChange={setShowCreateUserDialog}>
                 <DialogTrigger asChild>
-                  <Button className="flex items-center gap-2">
+                  <Button 
+                    className="flex items-center gap-2"
+                    disabled={profiles.length >= 10}
+                  >
                     <Plus className="h-4 w-4" />
                     Create User
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-md">
+                <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>Create New User</DialogTitle>
                   </DialogHeader>
                   
                   <div className="space-y-4">
-                    <div>
-                      <Label htmlFor="email">Email</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        value={newUser.email}
-                        onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
-                        placeholder="Enter email address"
-                        className="mt-1"
-                        required
-                      />
+                    <div className="flex flex-col items-center gap-3">
+                      <Avatar className="w-24 h-24">
+                        <AvatarImage src={newUser.photoPreview} />
+                        <AvatarFallback className="bg-primary/10">
+                          {newUser.fullName?.charAt(0) || <User className="h-8 w-8" />}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="text-center">
+                        <Input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleNewUserPhotoUpload}
+                          className="hidden"
+                          id="new-user-photo"
+                        />
+                        <Button
+                          variant="outline"
+                          onClick={() => document.getElementById('new-user-photo')?.click()}
+                          disabled={loading}
+                          className="flex items-center gap-2"
+                        >
+                          <Upload className="h-4 w-4" />
+                          Upload Passport Photo *
+                        </Button>
+                        {newUser.photoPreview && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setNewUser(prev => ({ 
+                              ...prev, 
+                              photoFile: null, 
+                              photoPreview: '' 
+                            }))}
+                            disabled={loading}
+                            className="mt-1"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
                     </div>
-                    
+
                     <div>
-                      <Label htmlFor="username">Username</Label>
-                      <Input
-                        id="username"
-                        type="text"
-                        value={newUser.username}
-                        onChange={(e) => setNewUser({ ...newUser, username: e.target.value })}
-                        placeholder="Enter username"
-                        className="mt-1"
-                        required
-                      />
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor="fullName">Full Name</Label>
+                      <Label htmlFor="fullName">Full Name *</Label>
                       <Input
                         id="fullName"
                         type="text"
@@ -550,7 +637,33 @@ export const AdminDashboard = () => {
                     </div>
                     
                     <div>
-                      <Label htmlFor="password">Password</Label>
+                      <Label htmlFor="email">Email *</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={newUser.email}
+                        onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+                        placeholder="Enter email address"
+                        className="mt-1"
+                        required
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="username">Username *</Label>
+                      <Input
+                        id="username"
+                        type="text"
+                        value={newUser.username}
+                        onChange={(e) => setNewUser({ ...newUser, username: e.target.value })}
+                        placeholder="Enter username"
+                        className="mt-1"
+                        required
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="password">Password *</Label>
                       <Input
                         id="password"
                         type="password"
@@ -586,10 +699,25 @@ export const AdminDashboard = () => {
                   </div>
                   
                   <div className="flex justify-end gap-2 mt-6">
-                    <Button variant="outline" onClick={() => setShowCreateUserDialog(false)}>
+                    <Button variant="outline" onClick={() => {
+                      setShowCreateUserDialog(false);
+                      setNewUser({
+                        email: '',
+                        username: '',
+                        fullName: '',
+                        password: '',
+                        isAdmin: false,
+                        requireVerification: true,
+                        photoFile: null,
+                        photoPreview: ''
+                      });
+                    }}>
                       Cancel
                     </Button>
-                    <Button onClick={handleCreateUser} disabled={!newUser.email || !newUser.password || !newUser.fullName || !newUser.username}>
+                    <Button 
+                      onClick={handleCreateUser} 
+                      disabled={!newUser.email || !newUser.password || !newUser.fullName || !newUser.username || !newUser.photoFile || loading}
+                    >
                       Create User
                     </Button>
                   </div>
