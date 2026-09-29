@@ -1,51 +1,6 @@
  # 🏡 Estate Buddy
 
 A modern real-estate management app built with **React, TypeScript, TailwindCSS, and shadcn-ui**.
-## 🚀 Getting Started
-
-### 1. Clone the Repository
-
-```bash
-git clone <YOUR_GIT_URL>
-cd <YOUR_PROJECT_NAME>
-```
-
-### 2. Install Dependencies
-
-```bash
-npm install
-```
-
-### 3. Start the Development Server
-
-```bash
-npm run dev
-```
-
-> 💡 Requires **Node.js & npm** installed. [Install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
-
----
-
-## 🛠 Development Options
-
-### 🔹 Use Your Preferred IDE
-
-Clone, edit, and push changes directly from your IDE. Updates will sync with **Lovable**.
-
-### 🔹 Edit on GitHub
-
-1. Open the desired file.
-2. Click the ✏️ **Edit** button.
-3. Make changes, commit, and push.
-
-### 🔹 GitHub Codespaces
-
-1. Click the green **Code** button.
-2. Open the **Codespaces** tab.
-3. Launch a new Codespace.
-4. Edit, commit, and push your changes directly.
-
----
 
 ## 🧰 Tech Stack
 
